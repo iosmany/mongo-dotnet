@@ -1,0 +1,6 @@
+
+/bin/**
+/obj/**
+/.vs/mongo-dotnet
+/mongo-dotnet.tests/bin/Debug/net9.0
+/mongo-dotnet.tests/obj
