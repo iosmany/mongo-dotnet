@@ -54,7 +54,7 @@ sealed class StorageIdSerializaer : IBsonSerializer<StorageId>
     }
 }
 
-sealed class MongoDbProvider : IStorageProvider
+internal sealed class MongoDbProvider : IStorageProvider
 {
     private readonly IMongoClient _mongoClient;
     private readonly IMongoDatabase _mongoDatabase;

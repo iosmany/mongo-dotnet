@@ -11,13 +11,3 @@ IConfiguration configuration = builder.Build();
 
 Application.Init(configuration);
 
-
-// var client = new MongoClient(connectionString);
-
-// var collection = client.GetDatabase(databaseName).GetCollection<BsonDocument>("movies");
-
-// var filter = Builders<BsonDocument>.Filter.Eq("title", "Inception");
-
-// var document = collection.Find(filter).FirstOrDefault();
-
-//Console.WriteLine(document);

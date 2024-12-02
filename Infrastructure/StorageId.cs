@@ -14,11 +14,6 @@ public partial class StorageId
         Id = id;
     }
 
-    // public static explicit operator StorageId(ObjectId id)
-    //     => new StorageId(id.ToString());
-
-    // public static explicit operator ObjectId(StorageId id)
-    //     => new ObjectId(id.Id);
 
     public static implicit operator StorageId(string id)
         => new StorageId(id);
