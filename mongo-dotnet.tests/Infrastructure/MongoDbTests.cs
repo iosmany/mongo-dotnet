@@ -1,7 +1,6 @@
 
 using Microsoft.Extensions.Configuration;
 using MongoDotnet.Models;
-using Xunit;
 
 namespace MongoDotnet.Infrastructure;
 
@@ -9,7 +8,7 @@ namespace MongoDotnet.Infrastructure;
 public class MongoDbTests 
 {
 
-    MongoDbProvider? _provider;
+    private MongoDbProvider? _provider;
 
     void Setup()
     {
@@ -38,8 +37,8 @@ public class MongoDbTests
     {
         Setup();
         // Act
-        var obj= new Movie { Id=Guid.NewGuid().ToString(), Title = "Test Movie", Year = 2021, Director = "Unknown Director" };
-        _provider!.Add(obj);
+        var obj= new Movie { Title = "Test Movie", Year = 2021, Director = "Unknown Director" };
+        _provider!.Save(obj);
         
         var movies = _provider.GetAll<Movie>();
         // Assert

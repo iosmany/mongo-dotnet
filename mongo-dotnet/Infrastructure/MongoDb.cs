@@ -4,6 +4,11 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using MongoDotnet.Base;
 using MongoDB.Bson.Serialization;
+using mongo_dotnet.Models;
+using MongoDB.Driver.GeoJsonObjectModel;
+using mongo_dotnet.Infrastructure;
+using System.Formats.Tar;
+using System.Linq.Expressions;
 
 namespace MongoDotnet.Infrastructure;
 
@@ -65,9 +70,15 @@ internal sealed class MongoDbProvider : IStorageProvider
         _mongoClient = new MongoClient(connectionString);
          var section = configuration.GetSection("MongoDb");
         _mongoDatabase = _mongoClient.GetDatabase(section["DatabaseName"]);
-
          // Register the custom serializer
         BsonSerializer.RegisterSerializer(new StorageIdSerializaer());
+    }
+
+    E GetById<E>(IMongoCollection<E> collection, ObjectId id) where E: class, IEntity
+    {
+        return collection
+            .Find(Builders<E>.Filter.Eq(u => u.Id, id))
+            .FirstOrDefault();
     }
 
     string CollectionName<E>() where E : class
@@ -76,21 +87,70 @@ internal sealed class MongoDbProvider : IStorageProvider
         return attribute?.Collection ?? typeof(E).Name;
     }
 
-    public void Add<E>(E entity) where E : class
+    IMongoCollection<E> GetCollection<E>() where E : class
     {
-        var collection = _mongoDatabase.GetCollection<E>(CollectionName<E>());
-        collection.InsertOne(entity);
+        var collection= _mongoDatabase.GetCollection<E>(CollectionName<E>());
+        ArgumentNullException.ThrowIfNull(collection, nameof(collection));
+        return collection;
     }
 
-    public IEnumerable<E> GetAll<E>() where E : class
+    public void Save<E>(E entity) where E : class, IEntity
     {
-        var collection = _mongoDatabase.GetCollection<E>(CollectionName<E>());
-        return collection.Find(new BsonDocument()).ToList();
+        var collection = GetCollection<E>();
+        var current = GetById(collection, entity.Id);
+        if (current is not null)
+        {
+            var filter = Builders<E>.Filter.Eq(u => u.Id, entity.Id);
+            var updateDefinition = Builders<E>.Update.Set(u => u, entity);
+            collection.UpdateOne(filter, updateDefinition);
+        }
+        else
+            collection.InsertOne(entity);
     }
- 
+
+    public IEnumerable<E> GetAll<E>() where E : class, IEntity
+        => GetCollection<E>()
+        .Find(new BsonDocument())
+        .ToList();
+
+    public void Delete<E>(ObjectId id) where E : class, IEntity
+    {
+        var collection = GetCollection<E>();
+        var current = GetById(collection, id);
+        if (current is not null)
+        {
+            var filter = Builders<E>.Filter.Eq(u => u.Id, id);
+            collection.DeleteOne(filter);
+        }
+    }
+
+    public IEnumerable<E> Search<E>(string text, string language = "es") 
+        where E : class, IEntity
+    {
+        var filter = Builders<E>
+            .Filter.Text(text, new TextSearchOptions { Language = language });
+
+        var collection = GetCollection<E>();
+
+        return collection
+            .Find(filter)
+            .ToList();
+    }
+
+    public IEnumerable<E> FindNear<E>(Point point, Expression<Func<E, object?>> locationField, double maxDistanceMeters = 100) 
+        where E: class, IEntity
+    {
+        var collection = GetCollection<E>();
+        var coordinates = new GeoJson2DCoordinates(point.Longitude, point.Latitude);
+        var geoPoint = new GeoJsonPoint<GeoJson2DCoordinates>(coordinates);
+        var filter = Builders<E>.Filter.NearSphere(locationField, geoPoint, maxDistance: maxDistanceMeters);
+        return collection.Find(filter).ToList();
+    }
+
+
     #region Dispose
 
-     public void Dispose()
+    public void Dispose()
     {
         _mongoClient?.Dispose();
     }

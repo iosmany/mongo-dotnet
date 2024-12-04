@@ -1,14 +1,13 @@
 
+using mongo_dotnet.Models;
 using MongoDotnet.Infrastructure;
 
-namespace MongoDotnet.Models
+namespace MongoDotnet.Models;
+
+[MongoDescriptor("movies")]
+class Movie: Entity
 {
-    [MongoDescriptor("movies")]
-    public class Movie
-    {
-        public required string Id { get; set; }
-        public required string Title { get; set; }
-        public required string Director { get; set; }
-        public int Year { get; set; }
-    }
+    public required string Title { get; set; }
+    public required string Director { get; set; }
+    public int Year { get; set; }
 }

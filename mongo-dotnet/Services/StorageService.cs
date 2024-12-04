@@ -1,8 +1,11 @@
 
 namespace MongoDotnet.Services;
+
+using mongo_dotnet.Models;
 using MongoDotnet.Base;
 
-sealed class StorageService: IStorageService {
+sealed class StorageService: IStorageService 
+{
 
     private readonly IStorageProvider _provider;
     public StorageService(IStorageProvider provider)
@@ -10,7 +13,7 @@ sealed class StorageService: IStorageService {
         _provider = provider;
     }
     
-    public IEnumerable<E> GetAll<E>() where E: class
+    public IEnumerable<E> GetAll<E>() where E: class, IEntity
     {
         return _provider.GetAll<E>();
     }
